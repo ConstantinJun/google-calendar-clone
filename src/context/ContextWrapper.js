@@ -27,6 +27,7 @@ export default function ContextWrapper(props) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [labels, setLabels] = useState([]);
   const [showUserDetails, setShowUserDetails] = useState(false);
+  const [showFeedbackPage, setShowFeedbackPage] = useState(false);
   const [authToken, setAuthToken] = useState(() => localStorage.getItem("authToken"));
 
   const [savedEvents, dispatchCalEvent] = useReducer(savedEventsReducer, [], () => {
@@ -176,6 +177,8 @@ export default function ContextWrapper(props) {
       setShowUserDetails,
       authToken,
       setAuthToken,
+      showFeedbackPage,
+      setShowFeedbackPage,
     }}
   >
     {props.children}

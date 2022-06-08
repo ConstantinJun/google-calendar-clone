@@ -44,8 +44,6 @@ export default function UserDetailsModal() {
   }
 
   const saveUserChanges = () => {
-    console.log("Saving user changes! for this: ", {id, username, email, firstName, lastName})
-
     fetch("http://localhost:8080/user", {
       method: "PUT", headers:
         {

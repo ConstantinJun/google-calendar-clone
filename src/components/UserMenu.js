@@ -8,11 +8,13 @@ import {faCircleUser} from "@fortawesome/free-solid-svg-icons";
 import GlobalContext from "../context/GlobalContext";
 import LoginItem from "./user-menu/LoginItem";
 import UserDetailsModal from "./user-menu/UserDetailsModal";
+import FeedbackDialog from "./user-menu/FeedbackDialog";
 
 export default function UserMenu() {
   const {
     setShowUserDetails,
     setAuthToken,
+    setShowFeedbackPage,
   } = useContext(GlobalContext);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -29,8 +31,8 @@ export default function UserMenu() {
   }
 
   const handleFeedback = () => {
+    setShowFeedbackPage(true);
     handleClose();
-    //TODO: Handle feedback
   }
 
   const handleLogout = () => {
@@ -64,14 +66,12 @@ export default function UserMenu() {
       }}
     >
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
-      <MenuItem onClick={handleClose}>Feedback</MenuItem>
+      <MenuItem onClick={handleFeedback}>Feedback</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
-    <>
-      <LoginItem/>
-    </>
-    <>
-      <UserDetailsModal/>
-    </>
+    <LoginItem/>
+    <UserDetailsModal/>
+    <FeedbackDialog/>
+
   </div>);
 }

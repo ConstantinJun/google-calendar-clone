@@ -23,6 +23,8 @@ const GlobalContext = React.createContext({
   setShowUserDetails: () => {},
   authToken: "",
   setAuthToken: () => {},
+  showFeedbackPage: false,
+  setShowFeedbackPage: () => {},
 });
 
 export default GlobalContext;
