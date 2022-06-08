@@ -95,8 +95,11 @@ export default function UserDetailsModal() {
             </Avatar>
           </Grid>
           <Grid item>
+            <span/>
+          </Grid>
+          <Grid item>
             <TextField
-              sx={{margin: `0 20px 0 0`}}
+              sx={{margin: `0 30px 0 0`}}
               label="Username"
               value={username}
               onChange={(e) => {
@@ -113,10 +116,10 @@ export default function UserDetailsModal() {
             ></TextField>
           </Grid>
           <Grid item>
-
+            <span/>
           </Grid>
           <Grid item>
-            <TextField sx={{margin: `0 20px 0 0`}}
+            <TextField sx={{margin: `0 30px 0 0`}}
                        label="First Name"
                        value={firstName}
                        onChange={(e) => {
@@ -132,15 +135,23 @@ export default function UserDetailsModal() {
             ></TextField>
           </Grid>
           <Grid item>
-
-            <Button sx={{margin: `0 10px`}}
+            <span/>
+          </Grid>
+          <Grid item>
+            <span/>
+          </Grid>
+          <Grid item>
+            <Button sx={{margin: `0 45px 0 0`}}
                     variant="contained"
+                    size="large"
                     onClick={saveUserChanges}
             >
               Save
             </Button>
             <Button
               variant="contained"
+              color="warning"
+              size="large"
               onClick={closeModal}
             >
               Cancel
