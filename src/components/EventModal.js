@@ -147,7 +147,7 @@ export default function EventModal() {
             <span className="material-icons-outlined text-gray-400">
               schedule
             </span>
-            <p>{daySelected.format("dddd, MMMM DD")}</p>
+            <p>{daySelected.format("dddd, MMMM DD, HH:mm")}</p>
             <span className="material-icons-outlined text-gray-400">
               segment
             </span>

@@ -30,7 +30,7 @@ export default function SmallCalendar() {
     setCurrentMonthIdx(currentMonthIdx + 1);
   }
   function getDayClass(day) {
-    const format = "DD-MM-YY";
+    const format = "DD-MM-YY HH:mm";
     const nowDay = dayjs().format(format);
     const currDay = day.format(format);
     const slcDay = daySelected && daySelected.format(format);

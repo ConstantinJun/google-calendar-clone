@@ -23,14 +23,14 @@ export default function CalendarHeader() {
   const {
     monthIndex,
     setMonthIndex,
-    token,
-    setToken,
+    updateCalendarContext,
   } = useContext(GlobalContext);
 
-  const [open, setOpen] = React.useState(!token);
+  const [open, setOpen] = React.useState(!localStorage.getItem("authToken"));
   const handleOpen = () => {
     if (localStorage.getItem("authToken")) {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("savedEvents");
     }
     handleClose();
   };
@@ -338,7 +338,7 @@ export default function CalendarHeader() {
                     endIcon={<LoginIcon/>}
                     onClick={onSubmmit}
                   >
-                    Registry
+                    Sign Up
                   </Button>
                 </Grid>
                 <Grid item>
