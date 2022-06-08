@@ -28,6 +28,7 @@ function initEvents() {
 }
 
 export default function ContextWrapper(props) {
+  const [token, setToken] = useState();
   const [monthIndex, setMonthIndex] = useState(dayjs().month());
   const [smallCalendarMonth, setSmallCalendarMonth] = useState(null);
   const [daySelected, setDaySelected] = useState(dayjs());
@@ -51,6 +52,26 @@ export default function ContextWrapper(props) {
 
   useEffect(() => {
     localStorage.setItem("savedEvents", JSON.stringify(savedEvents));
+    fetch("http://localhost:8080/calendar/event", {
+      method: "POST",
+      headears: new Headers({
+        Authorization: `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDb3N0ZWEiLCJleHAiOjE2NTQ2NTk2NTQsImlhdCI6MTY1NDY0MTY1NH0.v1ES7a_kVcVMriCkUO4kYVvu_0hXsFb6J1AXVf4abwNYHhGpCDpn3V1_FHA9iHisJasYLmIYd156xqqQdWD0_Q`,
+      }),
+      body: JSON.stringify({
+        ownerUsername: "user",
+        title: savedEvents,
+        notes: savedEvents.description,
+        rgbColor: savedEvents.label,
+        startDate: savedEvents.date,
+        endDate: savedEvents.date,
+        guests: [
+          {
+            guestEmail: "email@gmail.com",
+            responseStatus: "ACCEPT",
+          },
+        ],
+      }),
+    });
   }, [savedEvents]);
 
   useEffect(() => {

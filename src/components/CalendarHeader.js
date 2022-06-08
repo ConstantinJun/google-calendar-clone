@@ -1,9 +1,53 @@
-import dayjs from "dayjs";
-import React, { useContext } from "react";
-import logo from "../assets/logo.png";
+import React, { useContext, useState } from "react";
 import GlobalContext from "../context/GlobalContext";
+
+import dayjs from "dayjs";
+
+import { Avatar, Grid, Paper, TextField } from "@mui/material";
+import Modal from "@mui/material/Modal";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LoginIcon from "@mui/icons-material/Login";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import FormControl from "@mui/material/FormControl";
+import InputAdornment from "@mui/material/InputAdornment";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import InputLabel from "@mui/material/InputLabel";
+
+import Visibility from "@mui/icons-material/Visibility";
+import IconButton from "@mui/material/IconButton";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { Alert } from "@mui/material";
+
 export default function CalendarHeader() {
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const [status, changeStatus] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("");
   const { monthIndex, setMonthIndex } = useContext(GlobalContext);
+  const [statusResponse, setStatusResponse] = useState(false);
+  const handleClose = () => {setOpen(false)};
+
+  const [values, setValues] = React.useState({
+    showPassword: false,
+  });
+
+  const handleClickShowPassword = () => {
+    setValues({
+      ...values,
+      showPassword: !values.showPassword,
+    });
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   function handlePrevMonth() {
     setMonthIndex(monthIndex - 1);
   }
@@ -17,9 +61,66 @@ export default function CalendarHeader() {
         : dayjs().month()
     );
   }
+
+  const onSubmmit = (e) => {
+    console.log(
+      JSON.stringify({
+        login: username,
+        password: password,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      })
+    );
+
+    fetch("http://localhost:8080/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      mode: "cors",
+      body: JSON.stringify({
+        username: username,
+        password: password,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      }),
+    }).then( handleClose());
+  };
+
+  const onSubmmitLogin = (e) => {
+    console.log(
+      JSON.stringify({
+        login: username,
+        password: password,
+      })
+    );
+    fetch("http://localhost:8080/login", {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+    })
+      .then((res) => {
+        setStatusResponse(true);
+        handleClose()
+        res.json();
+      })
+      .then((result) => result);
+  };
+
+
+  const signOut = () => {
+    changeStatus(false);
+  };
+  const signIn = () => {
+    changeStatus(true);
+  };
+
   return (
     <header className="px-4 py-2 flex items-center">
-      <img src={logo} alt="calendar" className="mr-2 w-12 h-12" />
       <h1 className="mr-10 text-xl text-gray-500 fond-bold">
         Calendar
       </h1>
@@ -39,11 +140,205 @@ export default function CalendarHeader() {
           chevron_right
         </span>
       </button>
-      <h2 className="ml-4 text-xl text-gray-500 font-bold">
+      <h2 className="ml-4 text-xl text-gray-500 font-bold flex-1">
         {dayjs(new Date(dayjs().year(), monthIndex)).format(
           "MMMM YYYY"
         )}
       </h2>
+      <Button onClick={handleOpen} color="inherit">
+        Login
+      </Button>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        
+        <Box sx={{ position: "absolute", top: "20%", left: "40%" }}>
+          {!status ? (
+            <Paper
+              elevation={3}
+              sx={{ padding: `30px 20px`, width: 500 }}
+            >
+              <Grid
+                container
+                direction="column"
+                alignItems="center"
+                spacing={3}
+              >
+                <Grid item>
+                  <Avatar>
+                    <AccountCircleIcon></AccountCircleIcon>
+                  </Avatar>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    label="Username"
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                    }}
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <FormControl
+                    sx={{ m: 1, width: "25ch" }}
+                    variant="outlined"
+                  >
+                    <InputLabel htmlFor="outlined-adornment-password">
+                      Password
+                    </InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-password"
+                      type={values.showPassword ? "text" : "password"}
+                      value={values.password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                      }}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleClickShowPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {values.showPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                      label="Password"
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    onClick={onSubmmitLogin}
+                  >
+                    Login
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Typography component="span">
+                    You already have account ?
+                  </Typography>
+                  <Button onClick={signIn} endIcon={<LoginIcon />}>
+                    Create Account
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          ) : (
+            <Paper
+              elevation={3}
+              sx={{ padding: `30px 20px`, width: 500 }}
+            >
+              <Grid
+                container
+                direction="column"
+                alignItems="center"
+                spacing={3}
+              >
+                <Grid item>
+                  <Avatar>
+                    <AccountCircleIcon></AccountCircleIcon>
+                  </Avatar>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    label="Username"
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                    }}
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <FormControl
+                    sx={{ m: 1, width: "25ch" }}
+                    variant="outlined"
+                  >
+                    <InputLabel htmlFor="outlined-adornment-password">
+                      Password
+                    </InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-password"
+                      type={values.showPassword ? "text" : "password"}
+                      value={values.password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                      }}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleClickShowPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {values.showPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                      label="Password"
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    label="Email"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    label="Fisrt Name"
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                    }}
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    label="Last Name"
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                    }}
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    endIcon={<LoginIcon />}
+                    onClick={onSubmmit}
+                  >
+                    Registry
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Typography component="span">
+                    Not registered ?
+                  </Typography>
+                  <Button onClick={signOut} endIcon={<LoginIcon />}>
+                    Create Account
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
+        </Box>
+      </Modal>
+      
     </header>
   );
 }
