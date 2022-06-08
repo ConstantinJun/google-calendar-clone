@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useContext, useRef} from 'react';
+import {useContext} from 'react';
 import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -7,12 +7,12 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCircleUser} from "@fortawesome/free-solid-svg-icons";
 import GlobalContext from "../context/GlobalContext";
 import LoginItem from "./user-menu/LoginItem";
+import UserDetailsModal from "./user-menu/UserDetailsModal";
 
 export default function UserMenu() {
-  const logoutEventRef = useRef(null);
-
   const {
-    dispatchCalEvent,
+    setShowUserDetails,
+    setAuthToken,
   } = useContext(GlobalContext);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -22,31 +22,26 @@ export default function UserMenu() {
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+
+  const handleProfile = () => {
+    setShowUserDetails(true);
+    handleClose();
+  }
+
+  const handleFeedback = () => {
+    handleClose();
+    //TODO: Handle feedback
+  }
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    handleClose();
+  }
+
   const handleClose = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    if (localStorage.getItem("authToken")) {
-      localStorage.removeItem("authToken");
-
-      try {
-        JSON.parse(localStorage.getItem("savedEvents")).forEach(obj => {
-          dispatchCalEvent({
-            type: "delete",
-            payload: obj,
-          });
-        });
-      } catch (e) {
-        //ignore
-      }
-      localStorage.removeItem("savedEvents");
-    }
-    handleClose();
-    if (logoutEventRef.current) {
-      logoutEventRef.current();
-    }
-  }
   return (<div>
     <Button
       id="basic-button"
@@ -68,10 +63,15 @@ export default function UserMenu() {
         'aria-labelledby': 'basic-button',
       }}
     >
-      <MenuItem onClick={handleClose}>Profile</MenuItem>
+      <MenuItem onClick={handleProfile}>Profile</MenuItem>
       <MenuItem onClick={handleClose}>Feedback</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
-    <LoginItem logoutEvent={logoutEventRef}/>
+    <>
+      <LoginItem/>
+    </>
+    <>
+      <UserDetailsModal/>
+    </>
   </div>);
 }

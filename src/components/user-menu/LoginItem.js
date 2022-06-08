@@ -16,17 +16,27 @@ import LoginIcon from "@mui/icons-material/Login";
 import Modal from "@mui/material/Modal";
 import GlobalContext from "../../context/GlobalContext";
 
-export default function LoginItem({logoutEvent}) {
+export default function LoginItem() {
 
-  useEffect(() => {
-    logoutEvent.current = onLogout;
-  }, [])
   const {
     updateCalendarItems,
     dispatchCalEvent,
+    authToken,
+    setAuthToken,
   } = useContext(GlobalContext);
 
+  useEffect(() => {
+    checkToken();
+  }, [authToken])
+
   const [open, setOpen] = React.useState(!localStorage.getItem("authToken"));
+
+  function checkToken() {
+    if (!authToken) {
+      onLogout();
+    }
+  }
+
   const onLogout = () => {
     if (localStorage.getItem("authToken")) {
       localStorage.removeItem("authToken");
@@ -65,7 +75,6 @@ export default function LoginItem({logoutEvent}) {
     event.preventDefault();
   };
 
-
   const handleClickShowPassword = () => {
     setValues({
       ...values,
@@ -74,17 +83,7 @@ export default function LoginItem({logoutEvent}) {
   };
 
 
-  const onSubmmit = (e) => {
-    console.log(
-      JSON.stringify({
-        login: username,
-        password: password,
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-      })
-    );
-
+  const onSubmit = (e) => {
     fetch("http://localhost:8080/user", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -121,6 +120,7 @@ export default function LoginItem({logoutEvent}) {
       })
       .then((json) => {
         localStorage.setItem("authToken", json.jwtToken);
+        setAuthToken(json.jwtToken);
         handleClose();
       })
       .then(() => {
@@ -317,7 +317,7 @@ export default function LoginItem({logoutEvent}) {
                 <Button
                   variant="contained"
                   endIcon={<LoginIcon/>}
-                  onClick={onSubmmit}
+                  onClick={onSubmit}
                 >
                   Sign Up
                 </Button>

@@ -19,6 +19,10 @@ const GlobalContext = React.createContext({
   filteredEvents: [],
   updateCalendarItems: () => {},
   clearEvents: () => {},
+  showUserDetails: false,
+  setShowUserDetails: () => {},
+  authToken: "",
+  setAuthToken: () => {},
 });
 
 export default GlobalContext;
