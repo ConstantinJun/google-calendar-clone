@@ -27,7 +27,7 @@ export default function ContextWrapper(props) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [labels, setLabels] = useState([]);
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const [authToken, setAuthToken] = useState(null);
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem("authToken"));
 
   const [savedEvents, dispatchCalEvent] = useReducer(savedEventsReducer, [], () => {
     updateCalendarItems();
