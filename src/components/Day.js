@@ -14,7 +14,7 @@ export default function Day({ day, rowIdx }) {
   useEffect(() => {
     const events = filteredEvents.filter(
       (evt) =>
-        dayjs(evt.day).format("DD-MM-YY") === day.format("DD-MM-YY")
+        dayjs(evt.startDate).format("DD-MM-YY") === day.format("DD-MM-YY")
     );
     setDayEvents(events);
   }, [filteredEvents, day]);
@@ -51,7 +51,7 @@ export default function Day({ day, rowIdx }) {
             onClick={() => setSelectedEvent(evt)}
             className={`bg-${evt.label}-200 p-1 mr-3 text-gray-600 text-sm rounded mb-1 truncate`}
           >
-            {dayjs(evt.day).format('HH:mm') + ' - ' + evt.title}
+            {dayjs(evt.startDate).format('HH:mm') + ' - ' + evt.title}
           </div>
         ))}
       </div>

@@ -126,10 +126,11 @@ export default function ContextWrapper(props) {
           return {
             id: obj.eventId,
             title: obj.title,
-            day: dayjs(new Date(obj.startDate)).valueOf(),
-            user: ["April Tucker", "Ralph Hubbard"],
+            startDate: dayjs(new Date(obj.startDate)),
+            endDate: dayjs(new Date(obj.endDate)),
+            guests: obj.guests.map(obj => obj.guestEmail),
             description: obj.notes,
-            label: "purple"
+            label: obj.rgbColor
           }
         });
         localStorage.setItem("savedEvents", JSON.stringify(mapResult));
