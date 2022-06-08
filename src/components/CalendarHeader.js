@@ -1,9 +1,9 @@
-import React, { useContext, useState } from "react";
+import React, {useContext, useState} from "react";
 import GlobalContext from "../context/GlobalContext";
 
 import dayjs from "dayjs";
 
-import { Avatar, Grid, Paper, TextField } from "@mui/material";
+import {Avatar, Grid, Paper, TextField} from "@mui/material";
 import Modal from "@mui/material/Modal";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LoginIcon from "@mui/icons-material/Login";
@@ -18,20 +18,32 @@ import InputLabel from "@mui/material/InputLabel";
 import Visibility from "@mui/icons-material/Visibility";
 import IconButton from "@mui/material/IconButton";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { Alert } from "@mui/material";
 
 export default function CalendarHeader() {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
+  const {
+    monthIndex,
+    setMonthIndex,
+    token,
+    setToken,
+  } = useContext(GlobalContext);
+
+  const [open, setOpen] = React.useState(!token);
+  const handleOpen = () => {
+    if (localStorage.getItem("authToken")) {
+      localStorage.removeItem("authToken");
+    }
+    handleClose();
+  };
   const [status, changeStatus] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
-  const { monthIndex, setMonthIndex } = useContext(GlobalContext);
   const [statusResponse, setStatusResponse] = useState(false);
-  const handleClose = () => {setOpen(false)};
+  const handleClose = () => {
+    setOpen(!localStorage.getItem("authToken"));
+  };
 
   const [values, setValues] = React.useState({
     showPassword: false,
@@ -51,9 +63,11 @@ export default function CalendarHeader() {
   function handlePrevMonth() {
     setMonthIndex(monthIndex - 1);
   }
+
   function handleNextMonth() {
     setMonthIndex(monthIndex + 1);
   }
+
   function handleReset() {
     setMonthIndex(
       monthIndex === dayjs().month()
@@ -75,7 +89,7 @@ export default function CalendarHeader() {
 
     fetch("http://localhost:8080/user", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       mode: "cors",
       body: JSON.stringify({
         username: username,
@@ -84,20 +98,14 @@ export default function CalendarHeader() {
         firstName: firstName,
         lastName: lastName,
       }),
-    }).then( handleClose());
+    }).then(() => changeStatus(false));
   };
 
-  const onSubmmitLogin = (e) => {
-    console.log(
-      JSON.stringify({
-        login: username,
-        password: password,
-      })
-    );
+  const onLogin = (e) => {
     fetch("http://localhost:8080/login", {
       method: "POST",
       mode: "cors",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         username: username,
         password: password,
@@ -105,10 +113,18 @@ export default function CalendarHeader() {
     })
       .then((res) => {
         setStatusResponse(true);
-        handleClose()
-        res.json();
+        if (res.ok) {
+          return res.json();
+        } else {
+          console.log(res.status);
+          console.log(res.body);
+          return res.json();
+        }
       })
-      .then((result) => result);
+      .then((json) => {
+        localStorage.setItem("authToken", json.jwtToken);
+        handleClose();
+      });
   };
 
 
@@ -146,7 +162,7 @@ export default function CalendarHeader() {
         )}
       </h2>
       <Button onClick={handleOpen} color="inherit">
-        Login
+        {!localStorage.getItem("authToken") ? 'Login' : 'Log-Out'}
       </Button>
       <Modal
         open={open}
@@ -154,12 +170,12 @@ export default function CalendarHeader() {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        
-        <Box sx={{ position: "absolute", top: "20%", left: "40%" }}>
+
+        <Box sx={{position: "absolute", top: "20%", left: "40%"}}>
           {!status ? (
             <Paper
               elevation={3}
-              sx={{ padding: `30px 20px`, width: 500 }}
+              sx={{padding: `30px 20px`, width: 500}}
             >
               <Grid
                 container
@@ -182,7 +198,7 @@ export default function CalendarHeader() {
                 </Grid>
                 <Grid item>
                   <FormControl
-                    sx={{ m: 1, width: "25ch" }}
+                    sx={{m: 1, width: "25ch"}}
                     variant="outlined"
                   >
                     <InputLabel htmlFor="outlined-adornment-password">
@@ -204,9 +220,9 @@ export default function CalendarHeader() {
                             edge="end"
                           >
                             {values.showPassword ? (
-                              <VisibilityOff />
+                              <VisibilityOff/>
                             ) : (
-                              <Visibility />
+                              <Visibility/>
                             )}
                           </IconButton>
                         </InputAdornment>
@@ -218,17 +234,17 @@ export default function CalendarHeader() {
                 <Grid item>
                   <Button
                     variant="contained"
-                    onClick={onSubmmitLogin}
+                    onClick={onLogin}
                   >
                     Login
                   </Button>
                 </Grid>
                 <Grid item>
                   <Typography component="span">
-                    You already have account ?
+                    You don't have an account?
                   </Typography>
-                  <Button onClick={signIn} endIcon={<LoginIcon />}>
-                    Create Account
+                  <Button onClick={signIn} endIcon={<LoginIcon/>}>
+                    Create New Account
                   </Button>
                 </Grid>
               </Grid>
@@ -236,7 +252,7 @@ export default function CalendarHeader() {
           ) : (
             <Paper
               elevation={3}
-              sx={{ padding: `30px 20px`, width: 500 }}
+              sx={{padding: `30px 20px`, width: 500}}
             >
               <Grid
                 container
@@ -259,7 +275,7 @@ export default function CalendarHeader() {
                 </Grid>
                 <Grid item>
                   <FormControl
-                    sx={{ m: 1, width: "25ch" }}
+                    sx={{m: 1, width: "25ch"}}
                     variant="outlined"
                   >
                     <InputLabel htmlFor="outlined-adornment-password">
@@ -281,9 +297,9 @@ export default function CalendarHeader() {
                             edge="end"
                           >
                             {values.showPassword ? (
-                              <VisibilityOff />
+                              <VisibilityOff/>
                             ) : (
-                              <Visibility />
+                              <Visibility/>
                             )}
                           </IconButton>
                         </InputAdornment>
@@ -319,7 +335,7 @@ export default function CalendarHeader() {
                 <Grid item>
                   <Button
                     variant="contained"
-                    endIcon={<LoginIcon />}
+                    endIcon={<LoginIcon/>}
                     onClick={onSubmmit}
                   >
                     Registry
@@ -327,10 +343,10 @@ export default function CalendarHeader() {
                 </Grid>
                 <Grid item>
                   <Typography component="span">
-                    Not registered ?
+                    Already have an account?
                   </Typography>
-                  <Button onClick={signOut} endIcon={<LoginIcon />}>
-                    Create Account
+                  <Button onClick={signOut} endIcon={<LoginIcon/>}>
+                    Login
                   </Button>
                 </Grid>
               </Grid>
@@ -338,7 +354,7 @@ export default function CalendarHeader() {
           )}
         </Box>
       </Modal>
-      
+
     </header>
   );
 }
