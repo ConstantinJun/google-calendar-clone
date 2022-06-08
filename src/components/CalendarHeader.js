@@ -23,13 +23,25 @@ export default function CalendarHeader() {
   const {
     monthIndex,
     setMonthIndex,
-    updateCalendarContext,
+    updateCalendarItems,
+    dispatchCalEvent,
   } = useContext(GlobalContext);
 
   const [open, setOpen] = React.useState(!localStorage.getItem("authToken"));
   const handleOpen = () => {
     if (localStorage.getItem("authToken")) {
       localStorage.removeItem("authToken");
+
+      try{
+        JSON.parse(localStorage.getItem("savedEvents")).forEach(obj => {
+          dispatchCalEvent({
+            type: "delete",
+            payload: obj,
+          });
+        });
+      } catch (e){
+        //ignore
+      }
       localStorage.removeItem("savedEvents");
     }
     handleClose();
@@ -124,6 +136,9 @@ export default function CalendarHeader() {
       .then((json) => {
         localStorage.setItem("authToken", json.jwtToken);
         handleClose();
+      })
+      .then(() => {
+        updateCalendarItems();
       });
   };
 
@@ -134,6 +149,13 @@ export default function CalendarHeader() {
   const signIn = () => {
     changeStatus(true);
   };
+
+  function onKeyPress(event) {
+    if (event.key === 'Enter') {
+      console.log("Key pressed")
+      onLogin();
+    }
+  }
 
   return (
     <header className="px-4 py-2 flex items-center">
@@ -206,6 +228,8 @@ export default function CalendarHeader() {
                     </InputLabel>
                     <OutlinedInput
                       id="outlined-adornment-password"
+                      onKeyDown={onKeyPress}
+                      required={true}
                       type={values.showPassword ? "text" : "password"}
                       value={values.password}
                       onChange={(e) => {

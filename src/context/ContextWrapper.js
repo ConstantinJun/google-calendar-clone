@@ -5,7 +5,11 @@ import dayjs from "dayjs";
 function savedEventsReducer(state, {type, payload}) {
   switch (type) {
     case "push":
-      return [...state, payload];
+      if (state.some(obj => obj.id === payload.id)) {
+        return [...state];
+      } else {
+        return [...state, payload];
+      }
     case "update":
       return state.map((evt) => evt.id === payload.id ? payload : evt);
     case "delete":
@@ -23,50 +27,17 @@ export default function ContextWrapper(props) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [labels, setLabels] = useState([]);
   const [savedEvents, dispatchCalEvent] = useReducer(savedEventsReducer, [], () => {
-    const authToken = localStorage.getItem("authToken");
-
-    const year = dayjs().year();
-    let monthAtStart = dayjs(new Date(year, Math.floor(dayjs().month()), 1));
-    const firstDayOfTheMonth = monthAtStart.day();
-    let currentMonthCount = 1 - firstDayOfTheMonth;
-    let firstDayOfTable = dayjs(new Date(year, Math.floor(dayjs().month()), currentMonthCount));
-
-    let nextMonthAtStart = dayjs(new Date(year, Math.floor(dayjs().month()) + 1, 1));
-    const nextDayOfTheNextMonth = nextMonthAtStart.day();
-    let currentNextMonthCount = 7 - nextDayOfTheNextMonth;
-
-    let lastDayOfTable = dayjs(new Date(year, Math.floor(dayjs().month()) + 1, currentNextMonthCount));
-
-    const startDate = firstDayOfTable.format("YYYY-MM-DD");
-    const endDate = lastDayOfTable.format("YYYY-MM-DD");
-    if (authToken) {
-      fetch("http://localhost:8080/calendar/event?username=slendybear&startDate=" + startDate + "&endDate=" + endDate,
-        {
-          method: "GET",
-          mode: "cors",
-          headers: {
-            Authorization: `Bearer ` + authToken,
-          },
-        }).then(resp => {
-        return resp.json();
-      }).then(json => {
-        const mapResult = json.map(obj => {
-          return {
-            id: obj.eventId,
-            title: obj.title,
-            day: dayjs(new Date(obj.startDate)).valueOf(),
-            user: ["April Tucker", "Ralph Hubbard"],
-            description: obj.notes,
-            label: "purple"
-          }
-        });
-        localStorage.setItem("savedEvents", JSON.stringify(mapResult));
-      });
-    }
-
+    updateCalendarItems();
     const storageEvents = localStorage.getItem("savedEvents");
-    const parsedEvents = storageEvents ? JSON.parse(storageEvents) : [];
-    return parsedEvents;
+    try {
+      const parsedJson = JSON.parse(storageEvents);
+      if (Array.isArray(parsedJson)) {
+        return parsedJson;
+      }
+    } catch (e) {
+      //ignore
+    }
+    return [];
   });
 
   const filteredEvents = useMemo(() => {
@@ -107,6 +78,77 @@ export default function ContextWrapper(props) {
     setLabels(labels.map((lbl) => (lbl.label === label.label ? label : lbl)));
   }
 
+  function updateCalendarItems() {
+    const authToken = localStorage.getItem("authToken");
+
+    const year = dayjs().year();
+    let monthAtStart = dayjs(new Date(year, Math.floor(dayjs().month()), 1));
+    const firstDayOfTheMonth = monthAtStart.day();
+    let currentMonthCount = 1 - firstDayOfTheMonth;
+    let firstDayOfTable = dayjs(new Date(year, Math.floor(dayjs().month()), currentMonthCount));
+
+    let nextMonthAtStart = dayjs(new Date(year, Math.floor(dayjs().month()) + 1, 1));
+    const nextDayOfTheNextMonth = nextMonthAtStart.day();
+    let currentNextMonthCount = 7 - nextDayOfTheNextMonth;
+
+    let lastDayOfTable = dayjs(new Date(year, Math.floor(dayjs().month()) + 1, currentNextMonthCount));
+
+    const startDate = firstDayOfTable.format("YYYY-MM-DD");
+    const endDate = lastDayOfTable.format("YYYY-MM-DD");
+    if (authToken) {
+      fetch("http://localhost:8080/calendar/event?username=slendybear&startDate=" + startDate + "&endDate=" + endDate,
+        {
+          method: "GET",
+          mode: "cors",
+          headers: {
+            Authorization: `Bearer ` + authToken,
+          },
+        }).then(resp => {
+        if (resp.ok) {
+          return resp.json();
+        }
+        if (resp.status === 401 && localStorage.getItem("authToken")) {
+          clearEvents();
+          localStorage.removeItem("authToken");
+        }
+
+        let errorResponse = "Error on getting data.";
+        resp.json().then(json => {
+          errorResponse = json.errorMessage;
+        });
+        window.location.reload();
+      }).then(json => {
+        const mapResult = json.map(obj => {
+          return {
+            id: obj.eventId,
+            title: obj.title,
+            day: dayjs(new Date(obj.startDate)).valueOf(),
+            user: ["April Tucker", "Ralph Hubbard"],
+            description: obj.notes,
+            label: "purple"
+          }
+        });
+        localStorage.setItem("savedEvents", JSON.stringify(mapResult));
+
+        JSON.parse(localStorage.getItem("savedEvents")).forEach(obj => {
+          dispatchCalEvent({
+            type: "push",
+            payload: obj,
+          });
+        });
+      });
+    }
+  }
+
+  function clearEvents() {
+    JSON.parse(localStorage.getItem("savedEvents")).forEach(obj => {
+      dispatchCalEvent({
+        type: "delete",
+        payload: obj,
+      });
+    });
+  }
+
   return (<GlobalContext.Provider
     value={{
       monthIndex,
@@ -125,6 +167,8 @@ export default function ContextWrapper(props) {
       labels,
       updateLabel,
       filteredEvents,
+      updateCalendarItems,
+      clearEvents,
     }}
   >
     {props.children}

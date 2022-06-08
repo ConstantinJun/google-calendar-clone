@@ -17,6 +17,8 @@ const GlobalContext = React.createContext({
   labels: [],
   updateLabel: () => {},
   filteredEvents: [],
+  updateCalendarItems: () => {},
+  clearEvents: () => {},
 });
 
 export default GlobalContext;
