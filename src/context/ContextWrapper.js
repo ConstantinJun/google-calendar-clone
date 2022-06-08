@@ -31,6 +31,7 @@ export default function ContextWrapper(props) {
   const [authToken, setAuthToken] = useState(() => localStorage.getItem("authToken"));
 
   const [savedEvents, dispatchCalEvent] = useReducer(savedEventsReducer, [], () => {
+    localStorage.removeItem("savedEvents")
     updateCalendarItems();
     const storageEvents = localStorage.getItem("savedEvents");
     try {
@@ -83,6 +84,7 @@ export default function ContextWrapper(props) {
   }
 
   function updateCalendarItems() {
+    clearEvents();
     const authToken = localStorage.getItem("authToken");
 
     const year = dayjs().year();
@@ -113,7 +115,6 @@ export default function ContextWrapper(props) {
         }
         if (resp.status === 401 && localStorage.getItem("authToken")) {
           clearEvents();
-          localStorage.removeItem("authToken");
         }
 
         let errorResponse = "Error on getting data.";
@@ -146,12 +147,16 @@ export default function ContextWrapper(props) {
   }
 
   function clearEvents() {
-    JSON.parse(localStorage.getItem("savedEvents")).forEach(obj => {
-      dispatchCalEvent({
-        type: "delete",
-        payload: obj,
+    let savedEvents = localStorage.getItem("savedEvents");
+    if (savedEvents) {
+      JSON.parse(savedEvents).forEach(obj => {
+        dispatchCalEvent({
+          type: "delete",
+          payload: obj,
+        });
       });
-    });
+      localStorage.removeItem("savedEvents");
+    }
   }
 
   return (<GlobalContext.Provider

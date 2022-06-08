@@ -11,32 +11,14 @@ import {Description, Label} from "@mui/icons-material";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP, width: 250,
-    },
-  },
-};
-
-const names = ["Oliver Hansen", "Van Henry", "April Tucker", "Ralph Hubbard", "Omar Alexander", "Carlos Abbott", "Miriam Wagner", "Bradley Wilkerson", "Virginia Andrews", "Kelly Snyder",];
-
-function getStyles(name, personName, theme) {
-  return {
-    fontWeight: personName.indexOf(name) === -1 ? theme.typography.fontWeightRegular : theme.typography.fontWeightMedium,
-  };
-}
-
 const labelsClasses = ["indigo", "gray", "green", "blue", "red", "purple",];
 
 export default function EventModal() {
   const {
-    setShowEventModal, daySelected, dispatchCalEvent, selectedEvent,
+    authToken, setShowEventModal, daySelected, selectedEvent, clearEvents, updateCalendarItems,
   } = useContext(GlobalContext);
 
-  const [guests, setGuests] = React.useState(() => selectedEvent.guests);
+  const [guests, setGuests] = React.useState(() => selectedEvent ? selectedEvent.guests : []);
   const [currentGuest, setCurrentGuest] = React.useState("");
   const [startTimeSelected, setStartTimeSelected] = React.useState(selectedEvent ? dayjs(selectedEvent.startDate) : dayjs(new Date()));
   const [endTimeSelected, setEndTimeSelected] = React.useState(selectedEvent ? dayjs(selectedEvent.endDate) : dayjs(new Date()));
@@ -57,13 +39,71 @@ export default function EventModal() {
       id: selectedEvent ? selectedEvent.id : Date.now(),
     };
     if (selectedEvent) {
-      dispatchCalEvent({type: "update", payload: calendarEvent});
+      if (authToken) {
+        fetch("http://localhost:8080/calendar/event",
+          {
+            method: "PUT",
+            mode: "cors",
+            body: JSON.stringify({
+              eventId: selectedEvent.id,
+              notes: calendarEvent.description,
+              title: calendarEvent.title,
+              rgbColor: calendarEvent.label,
+              startDate: dayjs(calendarEvent.startDate).format("YYYY-MM-DDTHH:mm:ss"),
+              endDate: dayjs(calendarEvent.endDate).format("YYYY-MM-DDTHH:mm:ss"),
+              guests: calendarEvent.guests.map((guest) => ({
+                email: guest,
+                responseNote: "Maybe will attend.",
+                responseStatus: "TENTATIVE"
+              }))
+            }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ` + authToken,
+            },
+          }).then(resp => {
+          if (resp.ok) {
+            setShowEventModal(false);
+            updateCalendarItems();
+          } else if (resp.status === 401 && localStorage.getItem("authToken")) {
+            clearEvents();
+            localStorage.removeItem("authToken");
+          }
+        });
+      }
     } else {
-      dispatchCalEvent({type: "push", payload: calendarEvent});
-
+      if (authToken) {
+        fetch("http://localhost:8080/calendar/event",
+          {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify({
+              notes: calendarEvent.description,
+              title: calendarEvent.title,
+              rgbColor: calendarEvent.label,
+              startDate: daySelected.format("YYYY-MM-DDT") + dayjs(calendarEvent.startDate).format("HH:mm:ss"),
+              endDate: daySelected.format("YYYY-MM-DDT") + dayjs(calendarEvent.endDate).format("HH:mm:ss"),
+              guests: calendarEvent.guests.map((guest) => ({
+                email: guest,
+                responseNote: "Maybe will attend.",
+                responseStatus: "TENTATIVE"
+              }))
+            }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ` + authToken,
+            },
+          }).then(resp => {
+          if (resp.ok) {
+            setShowEventModal(false);
+            updateCalendarItems();
+          } else if (resp.status === 401 && localStorage.getItem("authToken")) {
+            clearEvents();
+            localStorage.removeItem("authToken");
+          }
+        });
+      }
     }
-
-    setShowEventModal(false);
   }
 
   function addNewGuestEmail() {
@@ -83,10 +123,23 @@ export default function EventModal() {
         <div>
           {selectedEvent && (<span
             onClick={() => {
-              dispatchCalEvent({
-                type: "delete", payload: selectedEvent,
+              fetch("http://localhost:8080/calendar/event?id=" + selectedEvent.id,
+                {
+                  method: "DELETE",
+                  mode: "cors",
+                  headers: {
+                    Authorization: `Bearer ` + authToken,
+                  },
+                }).then(resp => {
+                if (resp.ok) {
+                  setShowEventModal(false);
+                  updateCalendarItems();
+                } else if (resp.status === 401 && localStorage.getItem("authToken")) {
+                  clearEvents();
+                  localStorage.removeItem("authToken");
+                }
               });
-              setShowEventModal(false);
+
             }}
             className="material-icons-outlined text-gray-400 cursor-pointer"
           >
@@ -168,7 +221,7 @@ export default function EventModal() {
 
           <div className="col-span-11">
             <Grid container spacing={1}>
-              <Grid item xs={6}>
+              <Grid key="1" item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
                     label="Start Time"
@@ -178,7 +231,7 @@ export default function EventModal() {
                   />
                 </LocalizationProvider>
               </Grid>
-              <Grid item xs={6}>
+              <Grid key="2" item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
                     label="End Time"
@@ -203,20 +256,20 @@ export default function EventModal() {
 
           <div className="col-span-11">
             <Grid container direction="column" spacing={2}>
-              <Grid item>
+              <Grid key="1" item>
                 List of guests:
                 <Grid container>
-                  {guests.map((delGuest) => (<Grid item xs={6}>
+                  {guests.map((delGuest) => (<Grid key={delGuest} item xs={6}>
                     <Chip key={delGuest} label={delGuest} variant="outlined" onDelete={() => {
                       setGuests(guests.filter(guest => guest !== delGuest));
                     }}/>
                   </Grid>))}
                 </Grid>
               </Grid>
-              <Grid item>
+              <Grid key="2" item>
                 <span/>
               </Grid>
-              <Grid item>
+              <Grid key="3" item>
                 <TextField
                   label="Guest email to add"
                   size="small"
@@ -260,13 +313,9 @@ export default function EventModal() {
         </div>
       </div>
       <footer className="flex justify-end border-t p-3 mt-5">
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded text-white"
-        >
+        <Button onClick={handleSubmit} variant="contained" color="primary">
           Save
-        </button>
+        </Button>
       </footer>
     </form>
   </div>);

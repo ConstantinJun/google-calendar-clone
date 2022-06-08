@@ -130,7 +130,6 @@ export default function LoginItem() {
 
   function onKeyPress(event) {
     if (event.key === 'Enter') {
-      console.log("Key pressed")
       onLogin();
     }
   }
