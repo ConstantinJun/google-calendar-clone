@@ -115,6 +115,7 @@ export default function ContextWrapper(props) {
         }
         if (resp.status === 401 && localStorage.getItem("authToken")) {
           clearEvents();
+          localStorage.removeItem("authToken");
         }
 
         let errorResponse = "Error on getting data.";
